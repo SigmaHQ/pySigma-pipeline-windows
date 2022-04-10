@@ -72,7 +72,7 @@ def windows_pipeline():
             )
         )
     ]
-    
+
     the_category=[
         processing_item
         for category_name, info in windows_generic_category_channel_mapping.items()
@@ -106,10 +106,10 @@ def windows_pipeline():
             )
         )
     ]
-    
+
     return ProcessingPipeline(
-        name="Generic Log Sources to windows Transformation",
+        name="Generic Log Sources to Windows Transformation",
         priority=10,
         items=the_category + the_service
     )
-    
+
