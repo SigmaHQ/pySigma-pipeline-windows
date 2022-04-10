@@ -1,8 +1,8 @@
-![Tests](https://github.com/SigmaHQ/pySigma-pipeline-sysmon/actions/workflows/test.yml/badge.svg)
-![Coverage Badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/thomaspatzke/9c695cb26aae10cb8107941388340ec1/raw)
+![Tests](https://github.com/SigmaHQ/pySigma-pipeline-windows/actions/workflows/test.yml/badge.svg)
+![Coverage Badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/thomaspatzke/143d6c718b5bbc9fb7c0e33ed06b0f85/raw)
 ![Status](https://img.shields.io/badge/Status-pre--release-orange)
 
-# pySigma windows Processing Pipeline
+# pySigma Windows Processing Pipeline
 
 This is the windows service processing pipeline for pySigma. It provides the package `sigma.pipeline.windows` with the `windows_pipeline` function that returns a ProcessingPipeline object.
 
