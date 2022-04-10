@@ -1,5 +1,5 @@
 ![Tests](https://github.com/SigmaHQ/pySigma-pipeline-windows/actions/workflows/test.yml/badge.svg)
-![Coverage Badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/thomaspatzke/143d6c718b5bbc9fb7c0e33ed06b0f85/raw)
+![Coverage Badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/thomaspatzke/143d6c718b5bbc9fb7c0e33ed06b0f85/raw/SigmaHQ-pySigma-pipeline-windows.json)
 ![Status](https://img.shields.io/badge/Status-pre--release-orange)
 
 # pySigma Windows Processing Pipeline
