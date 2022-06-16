@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pysigma-pipeline-windows"
-version = "0.1.0"
+version = "0.1.1"
 description = "pySigma Windows processing pipelines"
 authors = ["frack113 <frack113@users.noreply.github.com>"]
 license = "LGPL-2.1-only"
