@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "pySigma Windows processing pipelines"
 authors = ["frack113 <frack113@users.noreply.github.com>"]
 license = "LGPL-2.1-only"
+repository = "https://github.com/SigmaHQ/pySigma-pipeline-windows"
 packages = [
     { include = "sigma" }
 ]
