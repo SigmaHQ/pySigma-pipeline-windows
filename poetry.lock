@@ -94,7 +94,7 @@ diagrams = ["railroad-diagrams", "jinja2"]
 
 [[package]]
 name = "pysigma"
-version = "0.6.2"
+version = "0.7.2"
 description = "Sigma rule processing and conversion tools"
 category = "main"
 optional = false
@@ -159,7 +159,7 @@ python-versions = ">=3.7"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "2f1fcbfd6e4497a80f8d530010078b965f4a954fc3d359fc4c108878be86d397"
+content-hash = "68e849ffe5485eeb7edce1825a8166ad3d70e4c50e2b0800a978c5fb3facd8d2"
 
 [metadata.files]
 atomicwrites = [
@@ -237,10 +237,7 @@ pyparsing = [
     {file = "pyparsing-3.0.8-py3-none-any.whl", hash = "sha256:ef7b523f6356f763771559412c0d7134753f037822dad1b16945b7b846f7ad06"},
     {file = "pyparsing-3.0.8.tar.gz", hash = "sha256:7bf433498c016c4314268d95df76c81b842a4cb2b276fa3312cfb1e1d85f6954"},
 ]
-pysigma = [
-    {file = "pySigma-0.6.2-py3-none-any.whl", hash = "sha256:c76108121cb2bc27eee8637a8334e2749c1d81b7ca84d9090537af09076c6cea"},
-    {file = "pySigma-0.6.2.tar.gz", hash = "sha256:d488de08edf6fd6ddf2e20770cf0acfa42c6867b5b7edbc6ef80cbba0f189da7"},
-]
+pysigma = []
 pytest = [
     {file = "pytest-7.1.1-py3-none-any.whl", hash = "sha256:92f723789a8fdd7180b6b06483874feca4c48a5c76968e03bb3e7f806a1869ea"},
     {file = "pytest-7.1.1.tar.gz", hash = "sha256:841132caef6b1ad17a9afde46dc4f6cfa59a05f9555aae5151f73bdf2820ca63"},

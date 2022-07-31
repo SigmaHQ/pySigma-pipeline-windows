@@ -1,35 +1,7 @@
 from sigma.processing.transformations import AddConditionTransformation, ChangeLogsourceTransformation
 from sigma.processing.conditions import LogsourceCondition
 from sigma.processing.pipeline import ProcessingItem, ProcessingPipeline
-
-windows_generic_service_channel_mapping = {    # map generic windows log sources to windows channel
-    "application": "Application",
-    "security": "Security",
-    "system": "System",
-    "sysmon": "Microsoft-Windows-Sysmon/Operational",
-    "powershell": "Microsoft-Windows-PowerShell/Operational",
-    "powershell-classic": "Windows PowerShell",
-    "dns-server": "DNS Server",
-    "driver-framework": "Microsoft-Windows-DriverFrameworks-UserMode/Operational",
-    "dhcp": "Microsoft-Windows-DHCP-Server/Operational",
-    "ntlm": "Microsoft-Windows-NTLM/Operational",
-    "windefend": "Microsoft-Windows-Windows Defender/Operational",
-    "printservice-admin": "Microsoft-Windows-PrintService/Admin",
-    "printservice-operational": "Microsoft-Windows-PrintService/Operational",
-    "smbclient-security": "Microsoft-Windows-SmbClient/Security",
-    "applocker": ["Microsoft-Windows-AppLocker/MSI and Script",
-                  "Microsoft-Windows-AppLocker/EXE and DLL",
-                  "Microsoft-Windows-AppLocker/Packaged app-Deployment",
-                  "Microsoft-Windows-AppLocker/Packaged app-Execution"],
-    "msexchange-management": "MSExchange Management",
-    "microsoft-servicebus-client": "Microsoft-ServiceBus-Client",
-    "ldap_debug": "Microsoft-Windows-LDAP-Client/Debug",
-    "taskscheduler": "Microsoft-Windows-TaskScheduler/Operational",
-    "wmi": "Microsoft-Windows-WMI-Activity/Operational",
-    "codeintegrity-operational": "Microsoft-Windows-CodeIntegrity/Operational",
-    "firewall-as": "Microsoft-Windows-Windows Firewall With Advanced Security/Firewall",
-    "bits-client": "WinEventlog:Microsoft-Windows-Bits-Client/Operational",
-}
+from sigma.pipelines.common import windows_logsource_mapping
 
 windows_generic_category_channel_mapping = {    # map generic windows log sources to windows channel
     "ps_module": {"service": "powershell", "EventID": 4103},
@@ -42,7 +14,7 @@ windows_generic_category_channel_mapping = {    # map generic windows log source
 def windows_pipeline():
     the_service=[
         processing_item
-        for service_name, channel in windows_generic_service_channel_mapping.items()
+        for service_name, channel in windows_logsource_mapping.items()
         for processing_item in (
             ProcessingItem(
                 identifier=f"windows_{service_name}_channel",
