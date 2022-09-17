@@ -94,7 +94,7 @@ diagrams = ["railroad-diagrams", "jinja2"]
 
 [[package]]
 name = "pysigma"
-version = "0.7.2"
+version = "0.8.1"
 description = "Sigma rule processing and conversion tools"
 category = "main"
 optional = false
@@ -159,7 +159,7 @@ python-versions = ">=3.7"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "68e849ffe5485eeb7edce1825a8166ad3d70e4c50e2b0800a978c5fb3facd8d2"
+content-hash = "06c7520570e9d6e9e5c23f74f16036bca08fe7ca4db6077e37e79f4612676423"
 
 [metadata.files]
 atomicwrites = [

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pysigma-pipeline-windows"
-version = "1.0.0"
+version = "1.0.1"
 description = "pySigma Windows processing pipelines"
 authors = ["frack113 <frack113@users.noreply.github.com>"]
 license = "LGPL-2.1-only"
@@ -11,7 +11,7 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.8"
-pysigma = "^0.7.2"
+pysigma = "^0.8.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.1"
