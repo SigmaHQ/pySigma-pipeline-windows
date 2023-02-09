@@ -1,7 +1,7 @@
 from sigma.processing.transformations import AddConditionTransformation, ChangeLogsourceTransformation
 from sigma.processing.conditions import LogsourceCondition
 from sigma.processing.pipeline import ProcessingItem, ProcessingPipeline
-from sigma.pipelines.common import windows_logsource_mapping
+from sigma.pipelines.common import generate_windows_logsource_items
 
 windows_generic_category_channel_mapping = {    # map generic windows log sources to windows channel
     "ps_module": {"service": "powershell", "EventID": 4103},
@@ -12,38 +12,10 @@ windows_generic_category_channel_mapping = {    # map generic windows log source
 }
 
 def windows_pipeline():
-    the_service=[
-        processing_item
-        for service_name, channel in windows_logsource_mapping.items()
-        for processing_item in (
-            ProcessingItem(
-                identifier=f"windows_{service_name}_channel",
-                transformation=AddConditionTransformation({
-                                "Channel": channel,
-                                }
-                            ),
-                rule_conditions=[
-                    LogsourceCondition(
-                        service=service_name,
-                        product="windows"
-                    )
-                ]
-            ),
-            ProcessingItem(
-                identifier="windows_{service_name}_logsource",
-                transformation=ChangeLogsourceTransformation(
-                    product="windows",
-                    service=service_name,
-                ),
-                rule_conditions=[
-                    LogsourceCondition(
-                        service=service_name,
-                        product="windows"
-                    )
-                ]
-            )
-        )
-    ]
+    the_service=generate_windows_logsource_items(
+        cond_field_template="Channel",
+        cond_value_template="{source}",
+    )
 
     the_category=[
         processing_item

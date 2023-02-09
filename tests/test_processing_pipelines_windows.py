@@ -1,6 +1,5 @@
 from sigma.collection import SigmaCollection
 from sigma.backends.test import TextQueryTestBackend
-from sigma.processing.resolver import ProcessingPipelineResolver
 from sigma.pipelines.windows import windows_pipeline
 import pytest
 
@@ -32,7 +31,7 @@ def security_sigma_rule():
                 ObjectName: test
             condition: sel
     """)
-    
+
 @pytest.fixture
 def firewall_as_sigma_rule():
     return SigmaCollection.from_yaml("""
@@ -46,7 +45,7 @@ def firewall_as_sigma_rule():
                 Action: block
             condition: sel
     """)
-    
+
 @pytest.fixture
 def ps_script_sigma_rule():
     return SigmaCollection.from_yaml("""
@@ -72,8 +71,8 @@ def test_windows_security(security_sigma_rule):
 def test_windows_firewall_as(firewall_as_sigma_rule):
     backend = TextQueryTestBackend(windows_pipeline())
     assert backend.convert(firewall_as_sigma_rule) == ['Channel="Microsoft-Windows-Windows Firewall With Advanced Security/Firewall" and Action="block"']
-  
+
 def test_windows_ps_script(ps_script_sigma_rule):
     backend = TextQueryTestBackend(windows_pipeline())
-    assert backend.convert(ps_script_sigma_rule) == ['Channel="Microsoft-Windows-PowerShell/Operational" and EventID=4104 and ScriptBlockText="test"']  
+    assert backend.convert(ps_script_sigma_rule) == ['(Channel in ("Microsoft-Windows-PowerShell/Operational", "PowerShellCore/Operational")) and EventID=4104 and ScriptBlockText="test"']
 
