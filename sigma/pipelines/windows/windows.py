@@ -85,27 +85,27 @@ def windows_audit_pipeline() -> ProcessingPipeline:
         priority=10,
         items=[
             processing_item
-            for logosurce, conditions in generic_logsource_to_windows_audit_event_mapping.items()
+            for logsource, conditions in generic_logsource_to_windows_audit_event_mapping.items()
             for processing_item in (
                 ProcessingItem(
-                    identifier=f"windows_{logosurce}_condition",
+                    identifier=f"windows_{logsource}_condition",
                     transformation=AddConditionTransformation(conditions),
                     rule_conditions=[
                         LogsourceCondition(
-                            category=logosurce,
+                            category=logsource,
                             product="windows",
                         )
                     ]
                 ),
                 ProcessingItem(
-                    identifier=f"windows_{logosurce}_logsource",
+                    identifier=f"windows_{logsource}_logsource",
                     transformation=ChangeLogsourceTransformation(
                         product="windows",
                         service="security",
                     ),
                     rule_conditions=[
                         LogsourceCondition(
-                            category=logosurce,
+                            category=logsource,
                             product="windows",
                         )
                     ]
