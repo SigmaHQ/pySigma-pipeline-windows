@@ -2,6 +2,7 @@
 name = "pysigma-pipeline-windows"
 version = "1.1.1"
 description = "pySigma Windows processing pipelines"
+readme = "README.md"
 authors = ["frack113 <frack113@users.noreply.github.com>"]
 license = "LGPL-2.1-only"
 repository = "https://github.com/SigmaHQ/pySigma-pipeline-windows"
