@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pysigma-pipeline-windows"
-version = "1.1.1"
+version = "1.2.0"
 description = "pySigma Windows processing pipelines"
 readme = "README.md"
 authors = ["frack113 <frack113@users.noreply.github.com>"]
@@ -12,13 +12,14 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.8"
-pysigma = "^0.10.2"
+pysigma = "^0.11"
 
 [tool.poetry.dev-dependencies]
-pytest = "^7.1.1"
-pytest-cov = "^3.0.0"
-coverage = "^6.3.2"
+black = "^24.1"
+pytest = "^8.0"
+pytest-cov = "^4.1"
+defusedxml = "^0.7"
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
+requires = ["poetry-core>=1.8.1"]
 build-backend = "poetry.core.masonry.api"
