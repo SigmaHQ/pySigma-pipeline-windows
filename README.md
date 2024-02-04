@@ -8,30 +8,6 @@ This is the windows service processing pipeline for pySigma. It provides the pac
 
 Currently the pipeline adds support for the following event types (Sigma logsource service and category to Channel mapping):
 
-* builtin service
-    * application
-    * security
-    * system
-    * sysmon
-    * powershell
-    * powershell-classic
-    * dns-server
-    * driver-framework
-    * dhcp
-    * ntlm
-    * windefend
-    * printservice-admin
-    * printservice-operational
-    * smbclient-security
-    * applocker
-    * msexchange-management
-    * microsoft-servicebus-client
-    * ldap_debug
-    * taskscheduler
-    * wmi
-    * codeintegrity-operational
-    * firewall-as
-    * bits-client
 * builtin category
     * ps_module
     * ps_script
