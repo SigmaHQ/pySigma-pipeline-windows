@@ -4,9 +4,12 @@
 
 # pySigma Windows Processing Pipeline
 
-This is the windows service processing pipeline for pySigma. It provides the package `sigma.pipeline.windows` with the `windows_pipeline` function that returns a ProcessingPipeline object.
+This is the windows service processing pipeline for pySigma. It provides the package `sigma.pipelines.windows` with the following functions that return a ProcessingPipeline object:
 
-Currently the pipeline adds support for the following event types (Sigma logsource service and category to Channel mapping):
+* `windows_logsource_pipeline` (pipeline name `windows-logsources`): maps Windows log source services and categories to Channel conditions.
+* `windows_audit_pipeline` (pipeline name `windows-audit`): maps generic log sources (`process_creation`, `registry_event`, `registry_set`, `registry_add`) to Windows Security audit events.
+
+Currently the `windows_logsource_pipeline` adds support for the following event types (Sigma logsource service and category to Channel mapping):
 
 * builtin category
     * ps_module
