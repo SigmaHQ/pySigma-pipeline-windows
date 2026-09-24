@@ -57,7 +57,7 @@ def windows_logsource_pipeline() -> ProcessingPipeline:
                 ]
             ),
             ProcessingItem(
-                identifier="windows_{category_name}_logsource",
+                identifier=f"windows_{category_name}_logsource",
                 transformation=ChangeLogsourceTransformation(
                     product="windows",
                     service=info["service"],

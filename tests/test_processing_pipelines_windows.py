@@ -1,6 +1,9 @@
 from sigma.collection import SigmaCollection
 from sigma.backends.test import TextQueryTestBackend
 from sigma.pipelines.windows import windows_logsource_pipeline, windows_audit_pipeline
+from sigma.processing.pipeline import ProcessingItem, ProcessingPipeline
+from sigma.processing.transformations import AddConditionTransformation
+from sigma.processing.conditions import RuleProcessingItemAppliedCondition
 import pytest
 
 @pytest.fixture
@@ -102,3 +105,32 @@ def test_windows_audit_registry_event(backend_windows_logosurce_audit):
                 condition: sel
         """)
     ) == ['Channel="Security" and EventID=4657 and (OperationType in ("New registry value created", "Existing registry value modified")) and ObjectName="test"']
+
+def test_windows_logsource_identifiers_unique():
+    identifiers = [item.identifier for item in windows_logsource_pipeline().items]
+    assert len(identifiers) == len(set(identifiers))
+    assert "windows_ps_script_logsource" in identifiers
+
+@pytest.mark.parametrize("category,applied", [("ps_script", True), ("ps_module", False)])
+def test_windows_ps_logsource_identifier_per_category(category, applied):
+    downstream = ProcessingPipeline(priority=20, items=[
+        ProcessingItem(
+            identifier="marker",
+            transformation=AddConditionTransformation({"Marker": "hit"}),
+            rule_conditions=[RuleProcessingItemAppliedCondition("windows_ps_script_logsource")],
+        )
+    ])
+    query = TextQueryTestBackend(windows_logsource_pipeline() + downstream).convert(
+        SigmaCollection.from_yaml(f"""
+            title: Powershell category Test
+            status: test
+            logsource:
+                category: {category}
+                product: windows
+            detection:
+                sel:
+                    ScriptBlockText: test
+                condition: sel
+        """)
+    )[0]
+    assert ('Marker="hit"' in query) == applied
