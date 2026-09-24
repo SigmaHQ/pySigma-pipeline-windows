@@ -1,8 +1,22 @@
 from ast import Dict
 from sigma.processing.transformations import AddConditionTransformation, ChangeLogsourceTransformation, FieldMappingTransformation
-from sigma.processing.conditions import LogsourceCondition
+from sigma.processing.conditions import LogsourceCondition, RuleProcessingCondition
 from sigma.processing.pipeline import ProcessingItem, ProcessingPipeline
 from sigma.pipelines.common import generate_windows_logsource_items, logsource_windows
+from sigma.rule import SigmaRule
+from dataclasses import dataclass
+
+@dataclass
+class LogsourceServiceUnsetCondition(RuleProcessingCondition):
+    """
+    Matches rules whose log source has no service yet. A generic log source that an earlier
+    pipeline (e.g. sysmon) already mapped to a service must not be mapped to Windows audit
+    events a second time.
+    """
+    def match(self, rule) -> bool:
+        if isinstance(rule, SigmaRule):
+            return rule.logsource.service is None
+        return True
 
 windows_generic_category_channel_mapping = {    # map generic windows log sources to windows channel
     "ps_module": {"service": "powershell", "EventID": 4103},
@@ -94,7 +108,8 @@ def windows_audit_pipeline() -> ProcessingPipeline:
                         LogsourceCondition(
                             category=logsource,
                             product="windows",
-                        )
+                        ),
+                        LogsourceServiceUnsetCondition(),
                     ]
                 ),
                 ProcessingItem(
@@ -107,7 +122,8 @@ def windows_audit_pipeline() -> ProcessingPipeline:
                         LogsourceCondition(
                             category=logsource,
                             product="windows",
-                        )
+                        ),
+                        LogsourceServiceUnsetCondition(),
                     ]
                 )
             )
