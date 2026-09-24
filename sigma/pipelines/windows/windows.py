@@ -1,5 +1,5 @@
 from ast import Dict
-from sigma.processing.transformations import AddConditionTransformation, ChangeLogsourceTransformation, FieldMappingTransformation
+from sigma.processing.transformations import AddConditionTransformation, ChangeLogsourceTransformation, FieldMappingTransformation, RuleFailureTransformation
 from sigma.processing.conditions import LogsourceCondition
 from sigma.processing.pipeline import ProcessingItem, ProcessingPipeline
 from sigma.pipelines.common import generate_windows_logsource_items, logsource_windows
@@ -21,6 +21,7 @@ generic_logsource_to_windows_audit_event_mapping : Dict = {        # map generic
         "OperationType": [
             "New registry value created",
             "Existing registry value modified",
+            "Registry value deleted",
         ],
     },
     "registry_set": {
@@ -31,6 +32,14 @@ generic_logsource_to_windows_audit_event_mapping : Dict = {        # map generic
         "EventID": 4657,
         "OperationType": "New registry value created",
     },
+    "registry_delete": {
+        "EventID": 4657,
+        "OperationType": "Registry value deleted",
+    },
+}
+
+windows_audit_unsupported_categories = {    # generic log sources without a Windows audit event counterpart
+    "registry_rename": "Windows Security event 4657 does not log registry key or value renames",
 }
 
 def windows_logsource_pipeline() -> ProcessingPipeline:
@@ -84,6 +93,18 @@ def windows_audit_pipeline() -> ProcessingPipeline:
         name="Map generic log sources to Windows audit logs",
         priority=10,
         items=[
+            ProcessingItem(
+                identifier=f"windows_{logsource}_unsupported",
+                transformation=RuleFailureTransformation(f"windows-audit: {reason}"),
+                rule_conditions=[
+                    LogsourceCondition(
+                        category=logsource,
+                        product="windows",
+                    )
+                ]
+            )
+            for logsource, reason in windows_audit_unsupported_categories.items()
+        ] + [
             processing_item
             for logsource, conditions in generic_logsource_to_windows_audit_event_mapping.items()
             for processing_item in (
