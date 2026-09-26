@@ -103,6 +103,7 @@ def test_windows_audit_registry_event(backend_windows_logosurce_audit):
                 condition: sel
         """)
     ) == ['Channel="Security" and EventID=4657 and (OperationType in ("New registry value created", "Existing registry value modified")) and ObjectName="test"']
+
 def test_windows_audit_registry_set_fieldmapping(backend_windows_logosurce_audit):
     assert backend_windows_logosurce_audit.convert(
         SigmaCollection.from_yaml("""
