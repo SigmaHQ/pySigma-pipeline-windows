@@ -1,6 +1,6 @@
 from ast import Dict
-from sigma.processing.transformations import AddConditionTransformation, ChangeLogsourceTransformation, FieldMappingTransformation, RuleFailureTransformation
-from sigma.processing.conditions import LogsourceCondition
+from sigma.processing.transformations import AddConditionTransformation, ChangeLogsourceTransformation, FieldMappingTransformation, DetectionItemFailureTransformation, RuleFailureTransformation
+from sigma.processing.conditions import LogsourceCondition, RuleProcessingItemAppliedCondition, IncludeFieldCondition
 from sigma.processing.pipeline import ProcessingItem, ProcessingPipeline
 from sigma.pipelines.common import generate_windows_logsource_items, logsource_windows
 
@@ -41,6 +41,19 @@ generic_logsource_to_windows_audit_event_mapping : Dict = {        # map generic
 windows_audit_unsupported_categories = {    # generic log sources without a Windows audit event counterpart
     "registry_rename": "Windows Security event 4657 does not log registry key or value renames",
 }
+
+windows_audit_registry_categories = ("registry_event", "registry_set", "registry_add", "registry_delete")
+
+windows_audit_registry_fieldmappings = {     # Sysmon taxonomy -> event 4657 fields
+    "Image": "ProcessName",
+    "TargetObject": "ObjectName",
+}
+
+windows_audit_registry_unsupported_fields = [   # Sysmon taxonomy fields without a 4657 counterpart
+    "EventType",    # no counterpart; OperationType is already set from the log source category
+    "NewName",      # key/value renames are not logged by 4657
+    "User",         # 4657 splits the account into SubjectUserName/SubjectDomainName
+]
 
 def windows_logsource_pipeline() -> ProcessingPipeline:
     the_service=generate_windows_logsource_items(
@@ -133,6 +146,33 @@ def windows_audit_pipeline() -> ProcessingPipeline:
                 )
             )
         ] + [
+            # Event 4657 (registry value modified) has its own field names: the acting process is
+            # ProcessName (not NewProcessName, which only exists in 4688) and the registry key is
+            # ObjectName. These items must run before the generic mapping below.
+            ProcessingItem(
+                identifier="windows_audit_registry_unsupported_fields",
+                transformation=DetectionItemFailureTransformation(
+                    "windows-audit: fields " + ", ".join(windows_audit_registry_unsupported_fields)
+                    + " have no equivalent in Windows Security event 4657"
+                ),
+                field_name_conditions=[
+                    IncludeFieldCondition(fields=windows_audit_registry_unsupported_fields),
+                ],
+                rule_condition_linking=any,
+                rule_conditions=[
+                    RuleProcessingItemAppliedCondition(f"windows_{logsource}_logsource")
+                    for logsource in windows_audit_registry_categories
+                ]
+            ),
+            ProcessingItem(
+                identifier="windows_audit_registry_fieldmappings",
+                transformation=FieldMappingTransformation(windows_audit_registry_fieldmappings),
+                rule_condition_linking=any,
+                rule_conditions=[
+                    RuleProcessingItemAppliedCondition(f"windows_{logsource}_logsource")
+                    for logsource in windows_audit_registry_categories
+                ]
+            ),
             ProcessingItem(
                 identifier="windows_audit_fieldmappings",
                 transformation=FieldMappingTransformation({

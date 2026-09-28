@@ -104,6 +104,75 @@ def test_windows_audit_registry_event(backend_windows_logosurce_audit):
         """)
     ) == ['Channel="Security" and EventID=4657 and (OperationType in ("New registry value created", "Existing registry value modified", "Registry value deleted")) and ObjectName="test"']
 
+def test_windows_audit_registry_set_fieldmapping(backend_windows_logosurce_audit):
+    assert backend_windows_logosurce_audit.convert(
+        SigmaCollection.from_yaml("""
+            title: Windows registry set rule test
+            status: test
+            logsource:
+                category: registry_set
+                product: windows
+            detection:
+                sel:
+                    Image|endswith: 'powershell.exe'
+                    TargetObject|contains: 'CurrentVersion'
+                    Details: 'evil.exe'
+                condition: sel
+        """)
+    ) == ['Channel="Security" and EventID=4657 and OperationType="Existing registry value modified" and ProcessName endswith "powershell.exe" and ObjectName contains "CurrentVersion" and NewValue="evil.exe"']
+
+@pytest.mark.parametrize("category", ["registry_event", "registry_add"])
+def test_windows_audit_registry_fieldmapping_all_categories(backend_windows_logosurce_audit, category):
+    query = backend_windows_logosurce_audit.convert(
+        SigmaCollection.from_yaml(f"""
+            title: Windows registry rule test
+            status: test
+            logsource:
+                category: {category}
+                product: windows
+            detection:
+                sel:
+                    Image: 'regedit.exe'
+                    TargetObject|contains: 'Services'
+                condition: sel
+        """)
+    )[0]
+    assert ' and ProcessName="regedit.exe"' in query
+    assert 'ObjectName contains "Services"' in query
+    assert "NewProcessName" not in query and "TargetObject" not in query
+
+def test_windows_audit_registry_mapping_does_not_affect_process_creation(backend_windows_logosurce_audit):
+    assert backend_windows_logosurce_audit.convert(
+        SigmaCollection.from_yaml("""
+            title: Windows process creation rule test
+            status: test
+            logsource:
+                category: process_creation
+                product: windows
+            detection:
+                sel:
+                    Image: "cmd.exe"
+                condition: sel
+        """)
+    ) == ['Channel="Security" and EventID=4688 and NewProcessName="cmd.exe"']
+
+def test_windows_audit_registry_eventtype_fails(backend_windows_logosurce_audit):
+    with pytest.raises(SigmaTransformationError, match="4657"):
+        backend_windows_logosurce_audit.convert(
+            SigmaCollection.from_yaml("""
+                title: Windows registry add rule test
+                status: test
+                logsource:
+                    category: registry_add
+                    product: windows
+                detection:
+                    sel:
+                        EventType: CreateKey
+                        TargetObject|contains: 'Run'
+                    condition: sel
+            """)
+        )
+
 def test_windows_audit_registry_delete(backend_windows_logosurce_audit):
     assert backend_windows_logosurce_audit.convert(
         SigmaCollection.from_yaml("""
