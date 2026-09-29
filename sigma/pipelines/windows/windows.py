@@ -1,5 +1,5 @@
 from typing import Dict
-from sigma.processing.transformations import AddConditionTransformation, ChangeLogsourceTransformation, FieldMappingTransformation, DetectionItemFailureTransformation
+from sigma.processing.transformations import AddConditionTransformation, ChangeLogsourceTransformation, FieldMappingTransformation, DetectionItemFailureTransformation, RuleFailureTransformation
 from sigma.processing.conditions import LogsourceCondition, RuleProcessingItemAppliedCondition, IncludeFieldCondition
 from sigma.processing.pipeline import ProcessingItem, ProcessingPipeline
 from sigma.pipelines.common import generate_windows_logsource_items, logsource_windows
@@ -21,6 +21,7 @@ generic_logsource_to_windows_audit_event_mapping : Dict = {        # map generic
         "OperationType": [
             "New registry value created",
             "Existing registry value modified",
+            "Registry value deleted",
         ],
     },
     "registry_set": {
@@ -31,9 +32,17 @@ generic_logsource_to_windows_audit_event_mapping : Dict = {        # map generic
         "EventID": 4657,
         "OperationType": "New registry value created",
     },
+    "registry_delete": {
+        "EventID": 4657,
+        "OperationType": "Registry value deleted",
+    },
 }
 
-windows_audit_registry_categories = ("registry_event", "registry_set", "registry_add")
+windows_audit_unsupported_categories = {    # generic log sources without a Windows audit event counterpart
+    "registry_rename": "Windows Security event 4657 does not log registry key or value renames",
+}
+
+windows_audit_registry_categories = ("registry_event", "registry_set", "registry_add", "registry_delete")
 
 windows_audit_registry_fieldmappings = {     # Sysmon taxonomy -> event 4657 fields
     "Image": "ProcessName",
@@ -70,7 +79,7 @@ def windows_logsource_pipeline() -> ProcessingPipeline:
                 ]
             ),
             ProcessingItem(
-                identifier="windows_{category_name}_logsource",
+                identifier=f"windows_{category_name}_logsource",
                 transformation=ChangeLogsourceTransformation(
                     product="windows",
                     service=info["service"],
@@ -97,6 +106,18 @@ def windows_audit_pipeline() -> ProcessingPipeline:
         name="Map generic log sources to Windows audit logs",
         priority=10,
         items=[
+            ProcessingItem(
+                identifier=f"windows_{logsource}_unsupported",
+                transformation=RuleFailureTransformation(f"windows-audit: {reason}"),
+                rule_conditions=[
+                    LogsourceCondition(
+                        category=logsource,
+                        product="windows",
+                    )
+                ]
+            )
+            for logsource, reason in windows_audit_unsupported_categories.items()
+        ] + [
             processing_item
             for logsource, conditions in generic_logsource_to_windows_audit_event_mapping.items()
             for processing_item in (
