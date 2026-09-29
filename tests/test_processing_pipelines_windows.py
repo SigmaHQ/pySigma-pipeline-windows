@@ -102,7 +102,7 @@ def test_windows_audit_registry_event(backend_windows_logosurce_audit):
                     ObjectName: test
                 condition: sel
         """)
-    ) == ['Channel="Security" and EventID=4657 and (OperationType in ("New registry value created", "Existing registry value modified")) and ObjectName="test"']
+    ) == ['Channel="Security" and EventID=4657 and (OperationType in ("New registry value created", "Existing registry value modified", "Registry value deleted")) and ObjectName="test"']
 
 def test_windows_audit_registry_set_fieldmapping(backend_windows_logosurce_audit):
     assert backend_windows_logosurce_audit.convert(
@@ -226,3 +226,49 @@ def test_windows_audit_process_creation_fields_not_applied_to_security_rules(bac
                 condition: sel
         """)
     ) == ['Channel="Security" and EventID=4663 and ProcessId="0x4"']
+
+def test_windows_audit_registry_delete(backend_windows_logosurce_audit):
+    assert backend_windows_logosurce_audit.convert(
+        SigmaCollection.from_yaml("""
+            title: Windows registry delete rule test
+            status: test
+            logsource:
+                category: registry_delete
+                product: windows
+            detection:
+                sel:
+                    ObjectName: test
+                condition: sel
+        """)
+    ) == ['Channel="Security" and EventID=4657 and OperationType="Registry value deleted" and ObjectName="test"']
+
+def test_windows_audit_registry_rename_fails(backend_windows_logosurce_audit):
+    with pytest.raises(SigmaTransformationError, match="renames"):
+        backend_windows_logosurce_audit.convert(
+            SigmaCollection.from_yaml("""
+                title: Windows registry rename rule test
+                status: test
+                logsource:
+                    category: registry_rename
+                    product: windows
+                detection:
+                    sel:
+                        ObjectName: test
+                    condition: sel
+            """)
+        )
+
+def test_windows_audit_registry_rename_other_pipelines_unaffected(backend_windows_logosurce_pipeline):
+    assert backend_windows_logosurce_pipeline.convert(
+        SigmaCollection.from_yaml("""
+            title: Windows registry rename rule test
+            status: test
+            logsource:
+                category: registry_rename
+                product: windows
+            detection:
+                sel:
+                    ObjectName: test
+                condition: sel
+        """)
+    ) == ['ObjectName="test"']
