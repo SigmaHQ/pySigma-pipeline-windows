@@ -1,4 +1,4 @@
-from ast import Dict
+from typing import Dict
 from sigma.processing.transformations import AddConditionTransformation, ChangeLogsourceTransformation, FieldMappingTransformation, DetectionItemFailureTransformation, MapStringTransformation, RuleFailureTransformation
 from sigma.processing.conditions import LogsourceCondition, RuleProcessingItemAppliedCondition, IncludeFieldCondition
 from sigma.processing.pipeline import ProcessingItem, ProcessingPipeline
