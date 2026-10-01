@@ -5,7 +5,7 @@ from sigma.exceptions import SigmaTransformationError
 from sigma.pipelines.windows.windows import LogsourceServiceUnsetCondition
 from sigma.processing.pipeline import ProcessingItem, ProcessingPipeline
 from sigma.processing.transformations import AddConditionTransformation, ChangeLogsourceTransformation
-from sigma.processing.conditions import LogsourceCondition
+from sigma.processing.conditions import LogsourceCondition, RuleProcessingItemAppliedCondition
 import pytest
 
 @pytest.fixture
@@ -106,7 +106,7 @@ def test_windows_audit_registry_event(backend_windows_logosurce_audit):
                     ObjectName: test
                 condition: sel
         """)
-    ) == ['Channel="Security" and EventID=4657 and (OperationType in ("New registry value created", "Existing registry value modified")) and ObjectName="test"']
+    ) == ['Channel="Security" and EventID=4657 and (OperationType in ("New registry value created", "Existing registry value modified", "Registry value deleted")) and ObjectName="test"']
 
 def test_windows_audit_registry_set_fieldmapping(backend_windows_logosurce_audit):
     assert backend_windows_logosurce_audit.convert(
@@ -176,6 +176,135 @@ def test_windows_audit_registry_eventtype_fails(backend_windows_logosurce_audit)
                     condition: sel
             """)
         )
+
+def test_windows_audit_process_creation_integrity_level(backend_windows_logosurce_audit):
+    assert backend_windows_logosurce_audit.convert(
+        SigmaCollection.from_yaml("""
+            title: Windows process creation rule test
+            status: test
+            logsource:
+                category: process_creation
+                product: windows
+            detection:
+                sel:
+                    CommandLine|contains: 'whoami'
+                    IntegrityLevel:
+                        - 'High'
+                        - 'S-1-16-12288'
+                        - 'System'
+                condition: sel
+        """)
+    ) == ['Channel="Security" and EventID=4688 and CommandLine contains "whoami" and (MandatoryLabel in ("S-1-16-12288", "S-1-16-12288", "S-1-16-16384"))']
+
+@pytest.mark.parametrize("field", ["OriginalFileName", "ParentCommandLine", "Hashes", "User", "ProcessId"])
+def test_windows_audit_process_creation_unsupported_field_fails(backend_windows_logosurce_audit, field):
+    with pytest.raises(SigmaTransformationError, match=f"'{field}'.*4688"):
+        backend_windows_logosurce_audit.convert(
+            SigmaCollection.from_yaml(f"""
+                title: Windows process creation rule test
+                status: test
+                logsource:
+                    category: process_creation
+                    product: windows
+                detection:
+                    sel1:
+                        Image|endswith: 'mimikatz.exe'
+                    sel2:
+                        {field}: 'test'
+                    condition: sel1 or sel2
+            """)
+        )
+
+def test_windows_audit_process_creation_fields_not_applied_to_security_rules(backend_windows_logosurce_audit):
+    assert backend_windows_logosurce_audit.convert(
+        SigmaCollection.from_yaml("""
+            title: Native security rule test
+            status: test
+            logsource:
+                service: security
+                product: windows
+            detection:
+                sel:
+                    EventID: 4663
+                    ProcessId: '0x4'
+                condition: sel
+        """)
+    ) == ['Channel="Security" and EventID=4663 and ProcessId="0x4"']
+
+def test_windows_logsource_identifiers_unique():
+    identifiers = [item.identifier for item in windows_logsource_pipeline().items]
+    assert len(identifiers) == len(set(identifiers))
+    assert "windows_ps_script_logsource" in identifiers
+
+@pytest.mark.parametrize("category,applied", [("ps_script", True), ("ps_module", False)])
+def test_windows_ps_logsource_identifier_per_category(category, applied):
+    downstream = ProcessingPipeline(priority=20, items=[
+        ProcessingItem(
+            identifier="marker",
+            transformation=AddConditionTransformation({"Marker": "hit"}),
+            rule_conditions=[RuleProcessingItemAppliedCondition("windows_ps_script_logsource")],
+        )
+    ])
+    query = TextQueryTestBackend(windows_logsource_pipeline() + downstream).convert(
+        SigmaCollection.from_yaml(f"""
+            title: Powershell category Test
+            status: test
+            logsource:
+                category: {category}
+                product: windows
+            detection:
+                sel:
+                    ScriptBlockText: test
+                condition: sel
+        """)
+    )[0]
+    assert ('Marker="hit"' in query) == applied
+
+def test_windows_audit_registry_delete(backend_windows_logosurce_audit):
+    assert backend_windows_logosurce_audit.convert(
+        SigmaCollection.from_yaml("""
+            title: Windows registry delete rule test
+            status: test
+            logsource:
+                category: registry_delete
+                product: windows
+            detection:
+                sel:
+                    ObjectName: test
+                condition: sel
+        """)
+    ) == ['Channel="Security" and EventID=4657 and OperationType="Registry value deleted" and ObjectName="test"']
+
+def test_windows_audit_registry_rename_fails(backend_windows_logosurce_audit):
+    with pytest.raises(SigmaTransformationError, match="renames"):
+        backend_windows_logosurce_audit.convert(
+            SigmaCollection.from_yaml("""
+                title: Windows registry rename rule test
+                status: test
+                logsource:
+                    category: registry_rename
+                    product: windows
+                detection:
+                    sel:
+                        ObjectName: test
+                    condition: sel
+            """)
+        )
+
+def test_windows_audit_registry_rename_other_pipelines_unaffected(backend_windows_logosurce_pipeline):
+    assert backend_windows_logosurce_pipeline.convert(
+        SigmaCollection.from_yaml("""
+            title: Windows registry rename rule test
+            status: test
+            logsource:
+                category: registry_rename
+                product: windows
+            detection:
+                sel:
+                    ObjectName: test
+                condition: sel
+        """)
+    ) == ['ObjectName="test"']
 
 def sysmon_like_pipeline():
     # Same shape as pySigma-pipeline-sysmon's process_creation items: it keeps the category and sets service=sysmon.
